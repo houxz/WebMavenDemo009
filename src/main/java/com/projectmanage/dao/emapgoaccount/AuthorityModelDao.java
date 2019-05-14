@@ -1,4 +1,4 @@
-package com.projectmanage.dao;
+package com.projectmanage.dao.emapgoaccount;
 
 import com.projectmanage.pojo.AuthorityModel;
 

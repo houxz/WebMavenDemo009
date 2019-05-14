@@ -15,6 +15,7 @@ import org.springframework.security.web.authentication.session.SessionAuthentica
 import org.springframework.stereotype.Component;
 
 import com.projectmanage.common.RoleType;
+import com.projectmanage.dao.projectmanager.UserRoleModelDao;
 import com.projectmanage.pojo.AuthorityModel;
 import com.projectmanage.service.EmapgoAccountService;
 import com.projectmanage.service.SessionService;
@@ -26,6 +27,9 @@ public class CustomUserDetailsService implements UserDetailsService{
 	private EmapgoAccountService emapgoAccountService;
 	
 	@Autowired
+	private UserRoleModelDao userRoleModelDao;
+	
+	@Autowired
 	private SessionService sessionService;
 
 	public CustomUserDetails   loadUserByUsername(String username) throws UsernameNotFoundException {
@@ -35,7 +39,7 @@ System.out.println("=======CustomUserDetailsService:loadUserByUsername()========
 		if( sessionService.isDuplicateLogin(username) ) {
 			throw new SessionAuthenticationException(new String());
 		}
-		
+		//根据姓名查询 用户数据库中用户信息
 		AuthorityModel authority = emapgoAccountService.getAuthorityByUsername(username);
 		if( authority == null) {
 			throw new UsernameNotFoundException(new String());
@@ -48,12 +52,19 @@ System.out.println("=======CustomUserDetailsService:loadUserByUsername()========
 		
 		List<GrantedAuthority> auths = new ArrayList<GrantedAuthority>();
 		
-		Map<String, Object> auth = new HashMap<String,Object>();
-		auth.put("rolename", RoleType.ROLE_POIVIDEOEDIT);//byhxz bug
-		auths.add( new SimpleGrantedAuthority(MapUtils.getString(auth, "rolename")));
+//		Map<String, Object> auth = new HashMap<String,Object>();
+//		auth.put("rolename", RoleType.ROLE_POIVIDEOEDIT);//byhxz bug
+//		auths.add( new SimpleGrantedAuthority(MapUtils.getString(auth, "rolename")));
 		
 		Integer userid = authority.getId();
 		
+		//查询用户有那些角色
+		List<Map<String,Object>> authlist  = userRoleModelDao.getEpleRoles(userid);
+		for( Map<String,Object> auth : authlist) {
+System.out.println("=======loadUserByUsername(): " + MapUtils.getString( auth, "rolename"));
+			
+			auths.add( new SimpleGrantedAuthority(MapUtils.getString( auth, "rolename")));
+		}
 		//int s1= userDetails.getAuthorities().size();
 		userDetails.setAuthorities(auths);
 		int s2 = userDetails.getAuthorities().size();
